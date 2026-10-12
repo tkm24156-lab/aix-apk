@@ -1,0 +1,36 @@
+name: Build APK AIX
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-22.04        # jangan ubuntu-latest: p4a lebih stabil di 22.04
+    timeout-minutes: 120         # build pertama memang lama
+
+    steps:
+      - name: Ambil kode repositori
+        uses: actions/checkout@v4
+
+      - name: Build APK (Buildozer + Kivy)
+        id: buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        with:
+          workdir: .
+          buildozer_version: stable
+          command: buildozer android debug
+
+      - name: Unggah APK
+        uses: actions/upload-artifact@v4   # kalau GitHub menolak versi ini, ganti ke @v7
+        with:
+          name: aix-apk
+          path: |
+            bin/*.apk
+            ${{ steps.buildozer.outputs.filename }}
+          if-no-files-found: error
+          retention-days: 30
